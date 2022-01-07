@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('partials/head'); %>
+</head>
+<body class="container">
+
+<header>
+    <%- include('partials/header'); %>
+</header>
+
+<main>
+    <div class="jumbotron">
+        <h1>Pattern list :</h1>
+        <div id="patternTable">
+        </div>
+        <p>
+
+        </p>
+    </div>
+</main>
+
+<footer>
+    <%- include('partials/footer'); %>
+</footer>
+
+</body>
+</html>
+
+<script>
+    $(document).ready(function(){ 
+        $.get("patterns/all", (data) => {
+            $("#patternTable").html(data)
+        });
+    });
+</script>

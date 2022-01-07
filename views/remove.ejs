@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('partials/head'); %>
+</head>
+<body class="container">
+
+<header>
+  <%- include('partials/header'); %>
+</header>
+
+<main>
+    <div class="jumbotron">
+        <h1>Remove a pattern from the database</h1>
+        <form>
+
+            <div class="mb-3">
+                <label for="" class="form-label">Pattern name</label>
+                <select class="form-control" name="" id="">
+                    <% pattern_list.forEach((pattern) => { %>
+                        
+                        <option><%= pattern.id %> - <%= pattern.name %></option>
+                        <%});%>
+                        
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary" name="Submit" value="submit">Remove</button>
+        </form>
+    </div>
+</main>
+
+<footer>
+  <%- include('partials/footer'); %>
+</footer>

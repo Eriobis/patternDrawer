@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('partials/head'); %>
+</head>
+<body class="container">
+
+<header>
+  <%- include('partials/header'); %>
+</header>
+
+<main>
+    <div class="jumbotron">
+        <h1>Add a pattern to the database</h1>
+
+        <form action="/patterns/add" method="POST" id="myform" name="myFormName">
+        <div class="form-group">
+            <div class="input-group mb-3">
+                
+                <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text" id="basic-addon3">Company </span>
+                    </div> 
+                    <input type="text" class="form-control" name="company" id="pattern_company">
+                </div>
+                
+                <div class="input-group-prepend">
+                    <span class="input-group-text" id="basic-addon1">Name </span>
+                </div> 
+                <input type="text" class="form-control" name="name" id="pattern_name" required>
+            </div>
+
+            <div class="input-group mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text" id="basic-addon2">Number </span>
+                </div> 
+                <input type="text" class="form-control" name="number" id="pattern_number">
+            </div>
+
+            <div class="input-group mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text" id="basic-addon4">Type </span>
+                </div> 
+                <select class="form-control" name="type" id="pattern_type_select" multiple required>
+                </select>
+            </div>
+
+            <div class="input-group mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text" id="basic-addon4">Size </span>
+                </div> 
+                
+                <div class="form-check-inline"> <label class="form-check-label">
+                    <input type="checkbox" class="form-check-input" name="size" id="check_xs" value="xs"> xs 
+                </label></div>
+                <div class="form-check-inline"> <label class="form-check-label">
+                    <input type="checkbox" class="form-check-input" name="size" id="check_s" value="s"> s 
+                </label></div>
+                <div class="form-check-inline"> <label class="form-check-label">
+                    <input type="checkbox" class="form-check-input" name="size" id="check_m" value="m"> m 
+                </label></div>
+                <div class="form-check-inline"> <label class="form-check-label">
+                    <input type="checkbox" class="form-check-input" name="size" id="check_l" value="l"> l 
+                </label></div>
+                <div class="form-check-inline"> <label class="form-check-label">
+                    <input type="checkbox" class="form-check-input" name="size" id="check_xl" value="xl"> xl 
+                </label></div>
+                <label class="form-check-label">Custom:
+                    <input type="text" class="form-control-inline" name="size" id="size_custom"> 
+                </label>
+                
+            </div>
+
+            <div class="input-group mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text" id="basic-addon5">Size category</span>
+                </div> 
+                <select class="form-control" name="size_category" id="pattern_size_category">
+                    <!-- <div id="type_options"></div> -->
+                </select>
+            </div>
+
+            <div class="input-group mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text" id="basic-addon5">Fabric type </span>
+                </div> 
+                <select class="form-control" name="fabric" id="pattern_fabric_select">
+                    <!-- <div id="type_options"></div> -->
+                </select>
+            </div>
+
+            <div class="input-group mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text" id="basic-addon6">Fabric length (m)</span>
+                </div> 
+                <input type="number" class="form-control" name="fabric_length" id="pattern_length" value="0" step="0.1">
+            </div>
+
+
+            <div class="input-group mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text" id="basic-addon7">Note </span>
+                </div> 
+                <textarea type="" class="form-control" name="note" id="pattern_note"></textarea>
+            </div>
+
+            <div class="input-group mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text" id="basic-addon8">Bought on</span>
+                </div> 
+                <input type="date" class="form-control" name="date" id="pattern_date">
+            </div>
+            
+            <!-- <input type="file" class="filepond" name="ff" id="pattern_files" data-allow-reorder="true" multiple
+                    data-max-file-size="25MB" data-max-files="10"> -->
+        <div class="col-sm-1">
+            
+        </div>
+        <div class="col-sm-3">
+            
+            Files :
+            <input type="file" 
+                class="filepond"
+                name="files"
+                id="files"
+                multiple
+                data-max-file-size="3MB"
+                data-max-files="3" >
+            Thumbnail : 
+            <input type="file" 
+            class="filepond"
+            name="filepond_thumb"
+            id="filepond_thumb"
+            accept="image/png, image/jpeg, image/gif"/>
+        </div>
+            
+
+                <!-- <input type="submit" value="Submit"> -->
+            <button type="submit" class="btn btn-primary" name="Submit" value="submit">Submit</button>
+        </div>
+        </form>
+    </div>
+</main>
+
+<footer>
+  <%- include('partials/footer'); %>
+</footer>
+
+</body>
+</html>
+
+  <!-- Turn all file input elements into ponds -->
+<!-- <script>
+    FilePond.parse(document.body);
+</script> -->
+
+<script>
+    $(document).ready(function(){ 
+        $.get("fabric_type", (data) => {
+            let options = ""
+            data.forEach((type) => {
+                options = `<option id=fabric_${type.id}>${type.name}</option>`
+                $("#pattern_fabric_select").append(options)
+            });
+            console.log(options)
+        });
+
+        $.get("pattern_type", (data) => {
+            let options = ""
+            data.forEach((type) => {
+                options = `<option id=pattern_type_${type.id}>${type.name}</option>`
+                $("#pattern_type_select").append(options)
+            });
+            console.log(options)
+        });
+        
+        $.get("size_category", (data) => {
+            let options = ""
+            data.forEach((type) => {
+                options = `<option id=pattern_type_${type.id}>${type.name}</option>`
+                $("#pattern_size_category").append(options)
+            });
+            console.log(options)
+        });
+
+        // We register the plugins required to do 
+        // image previews, cropping, resizing, etc.
+        FilePond.registerPlugin(
+            FilePondPluginFileValidateType,
+            FilePondPluginImageExifOrientation,
+            FilePondPluginImagePreview,
+            FilePondPluginImageCrop,
+            FilePondPluginImageResize,
+            FilePondPluginImageTransform            
+        );
+        
+        FilePond.setOptions({
+            server: "upload"
+        })  
+        //     // Select the file input and use 
+        // // create() to turn it into a pond
+        FilePond.create(
+        document.querySelector('#filepond_thumb'),
+        {
+            labelIdle: `Drag & Drop your picture or <span class="filepond--label-action">Browse</span>`,
+            imagePreviewHeight: 50,
+            // imageCropAspectRatio: '1:1',
+            // imageResizeTargetWidth: 100,
+            // imageResizeTargetHeight: 100,
+            stylePanelLayout: 'compact circle',
+            styleLoadIndicatorPosition: 'center bottom',
+            styleProgressIndicatorPosition: 'right bottom',
+            styleButtonRemoveItemPosition: 'left bottom',
+            styleButtonProcessItemPosition: 'right bottom'
+        }
+        );
+
+        $('#myform').submit(function(event) {
+            event.preventDefault(); // Prevent the form from submitting via the browser
+            var form = $(this);
+            $.ajax({
+                type: form.attr('method'),
+                url: form.attr('action'),
+                data: form.serialize()
+            }).done(function(data) {
+            // Optionally alert the user of success here...
+                console.log("Part entered.")
+                alert("Pattern entered successfully.")
+                location.reload();
+            }).fail(function(data) {
+            // Optionally alert the user of an error here...
+            });
+        });
+    });
+
+    const inputElement = document.querySelector('#files');
+    const pond = FilePond.create( inputElement );
+    pond.setOptions({
+        server: "upload"
+    })
+
+</script>
+
