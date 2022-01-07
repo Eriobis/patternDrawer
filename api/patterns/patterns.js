@@ -12,38 +12,34 @@ var db = mysql.createConnection({
 });
 
 const formidable = require('formidable');
-const { rawListeners } = require('process');
-
 const express = require('express'),
-      router = express.Router(),
-      pool = require('../controllers/database'),
-      { positionHidden } = require('../config'),
-      moment = require('moment');
-
+      router = express.Router();
 // query to get all matches with results
 const patternsQuery = `SELECT * from pattern`
 
-const timeFormat = 'YYYY-MM-DD HH:mm:ss';
-
+// Return a table with a list of all the patterns
 router.get("/all", (req, res) => {
-
     console.log("Connected!");
     db.query(patternsQuery, function (err, result) {
-      if (err) throw err;
-      console.log("Result: " + result);
-      // res.json(result);
-      res.render("partials/patterns_table", {
-        pattern_list: result
-      })
+      if (err) {
+        throw err
+      }else{
+        console.log("Result: " + JSON.stringify(result));
+        // res.json(result);
+        res.render("partials/patterns_table", {
+          pattern_list: result
+        })
+      }
     });
 });
 
+// Return the DB table in json format
 router.get("/all_json", (req, res) => {
 
-  console.log("all_json!");
+  // console.log("all_json!");
   db.query(patternsQuery, function (err, result) {
     if (err) throw err;
-    console.log("All_Json : result: " + result);
+    // console.log("All_Json : result: " + result);
     // res.json(result);
     res.json(result)
     })
@@ -53,6 +49,7 @@ router.get("/add", (req, res) => {
   res.render("add")
 });
 
+// List all files in the data folder
 router.get("/files", (req, res) => {
   const patternFiles = './data/';
   const fs = require('fs');
@@ -81,7 +78,6 @@ router.get("/files", (req, res) => {
 });
 
 // Remove from database
-
 router.get("/remove", (req, res) => {
   db.query(patternsQuery, function (err, result) {
     if (err) throw err;
@@ -94,7 +90,6 @@ router.get("/remove", (req, res) => {
 });
 
 router.post("/remove", (req, res) => {
-
   if (req.body.type == 'undefined'){
     req.body.type = ""
   }else{
@@ -130,7 +125,6 @@ router.post("/remove", (req, res) => {
   }
 });
 
-
 router.get("/fabric_type", (req, res) => {
   let query = "SELECT * FROM fabric_type ORDER BY name"
   db.query(query, function (err, result) {
@@ -161,7 +155,6 @@ router.get("/size_category", (req, res) => {
   });
 });
 
-
 router.post("/debug", (req, res) => {
   console.log(req.body)
   res.send("ok")
@@ -178,15 +171,16 @@ router.post("/add", (req, res) => {
               `VALUES ( '${req.body.name}',  '${req.body.number}', '${req.body.size}', '${req.body.company}', '${req.body.fabric}',
                       ${parseFloat(req.body.fabric_length)},'${req.body.note}','${req.body.type}', '${req.body.size_category}')`
 
+      console.log(`Add pattern SQL query : ${query}`);
 
-      console.log("Connected!");
       db.query(query, function (err, result) {
         if (err){
-          res.send("FAILED\n" + JSON.stringify(req.body))
+          res.send("FAILED\n" + JSON.stringify(req.body) + "\nError : " + result)
           throw err
         }
         else{
-          console.log("Result: " + result);
+          console.log("Result: " + JSON.stringify(result));
+          console.log(`Object added, body : ${req.body}`)
           // Query is accepted, save the files on disk
           const fs = require('fs');
           // let fileData = fs.readFileSync(req.body.files);
@@ -218,8 +212,6 @@ router.post("/add", (req, res) => {
             }
           }
 
-
-
           // Thumbnail will have 1 file max
           if (req.body.filepond_thumb != undefined && req.body.filepond_thumb != ''){
             var f = JSON.parse(req.body.filepond_thumb).filepond_thumb
@@ -233,6 +225,7 @@ router.post("/add", (req, res) => {
       });
 });
 
+// File uploader
 router.post("/upload", function(req, res){
   console.log("BEGIN /upload");
   const form = formidable({ multiples: false });
