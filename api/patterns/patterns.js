@@ -1,5 +1,5 @@
 /**
-import * as FilePond from 'filepond'; 
+import * as FilePond from 'filepond';
  */
 
 var mysql = require('mysql');
@@ -27,7 +27,7 @@ const timeFormat = 'YYYY-MM-DD HH:mm:ss';
 
 router.get("/all", (req, res) => {
 
-    console.log("Connected!");  
+    console.log("Connected!");
     db.query(patternsQuery, function (err, result) {
       if (err) throw err;
       console.log("Result: " + result);
@@ -40,7 +40,7 @@ router.get("/all", (req, res) => {
 
 router.get("/all_json", (req, res) => {
 
-  console.log("all_json!");  
+  console.log("all_json!");
   db.query(patternsQuery, function (err, result) {
     if (err) throw err;
     console.log("All_Json : result: " + result);
@@ -68,7 +68,7 @@ router.get("/files", (req, res) => {
       var path = file.split("/data/")[1]
       var id = path.split("/")[0]
       var filename = file.split(`/data/${id}/`)[1]
-      
+
       if (fileArr[id] != undefined){
 
       }else{
@@ -80,6 +80,8 @@ router.get("/files", (req, res) => {
   })
 });
 
+// Remove from database
+
 router.get("/remove", (req, res) => {
   db.query(patternsQuery, function (err, result) {
     if (err) throw err;
@@ -90,6 +92,44 @@ router.get("/remove", (req, res) => {
     })
   });
 });
+
+router.post("/remove", (req, res) => {
+
+  if (req.body.type == 'undefined'){
+    req.body.type = ""
+  }else{
+    console.log(req.body)
+
+    if ( req.body.pattern != undefined && req.body.pattern != ''){
+      var pattern  = req.body.pattern
+      let query = ""
+      var patternArray = []
+      if (Array.isArray(pattern) && pattern.length > 1){
+        
+        for (var  i=0; i<pattern.length; i++){
+          patternArray.push(pattern[i])
+        }
+    
+      }else{
+        patternArray.push(pattern)
+      }
+
+      query = `DELETE FROM pattern WHERE id IN (${patternArray});`
+
+      db.query(query, (err,result)=>{
+        if (err){
+          // res.status(501).send()
+          throw err
+        } 
+        else{
+          console.log(result)
+          res.send(result)
+        }
+      })
+    }
+  }
+});
+
 
 router.get("/fabric_type", (req, res) => {
   let query = "SELECT * FROM fabric_type ORDER BY name"
@@ -129,22 +169,22 @@ router.post("/debug", (req, res) => {
 
 router.post("/add", (req, res) => {
   console.log(req.body)
-  
+
   if (req.body.type == 'undefined'){
     req.body.type = ""
   }
 
-  var query = "INSERT INTO pattern (`name`, `number`, `size`, `company`, `fabric`, `fabric_length`, `note`, `type`, `size_category`)" + 
+  var query = "INSERT INTO pattern (`name`, `number`, `size`, `company`, `fabric`, `fabric_length`, `note`, `type`, `size_category`)" +
               `VALUES ( '${req.body.name}',  '${req.body.number}', '${req.body.size}', '${req.body.company}', '${req.body.fabric}',
                       ${parseFloat(req.body.fabric_length)},'${req.body.note}','${req.body.type}', '${req.body.size_category}')`
 
 
-      console.log("Connected!");  
+      console.log("Connected!");
       db.query(query, function (err, result) {
         if (err){
           res.send("FAILED\n" + JSON.stringify(req.body))
           throw err
-        } 
+        }
         else{
           console.log("Result: " + result);
           // Query is accepted, save the files on disk
@@ -177,9 +217,9 @@ router.post("/add", (req, res) => {
               });
             }
           }
-          
-          
-          
+
+
+
           // Thumbnail will have 1 file max
           if (req.body.filepond_thumb != undefined && req.body.filepond_thumb != ''){
             var f = JSON.parse(req.body.filepond_thumb).filepond_thumb

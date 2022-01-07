@@ -12,19 +12,18 @@
 <main>
     <div class="jumbotron">
         <h1>Remove a pattern from the database</h1>
-        <form>
-
+        <form method="post" action="/patterns/remove">
             <div class="mb-3">
                 <label for="" class="form-label">Pattern name</label>
-                <select class="form-control" name="" id="">
+                <select class="form-control" name="pattern" id="pattern" multiple>
                     <% pattern_list.forEach((pattern) => { %>
                         
-                        <option><%= pattern.id %> - <%= pattern.name %></option>
+                        <option value=<%= pattern.id %>><%= pattern.id %> - <%= pattern.name %></option>
                         <%});%>
                         
                     </select>
-                </div>
-                <button type="submit" class="btn btn-primary" name="Submit" value="submit">Remove</button>
+            </div>
+            <button type="submit" class="btn btn-primary" name="Submit" value="submit">Remove</button>
         </form>
     </div>
 </main>
