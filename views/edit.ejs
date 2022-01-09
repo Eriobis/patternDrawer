@@ -11,9 +11,9 @@
 
 <main>
     <div class="jumbotron">
-        <h1>Add a pattern to the database</h1>
+        <h1>Edit pattern</h1>
 
-        <form action="/patterns/add" method="POST" id="myform" name="myFormName">
+        <form action="/patterns/edit" method="POST" id="myform" name="myFormName">
         <div class="form-group">
             <div class="input-group mb-3">
                 
@@ -21,33 +21,33 @@
                     <div class="input-group-prepend">
                         <span class="input-group-text" id="basic-addon3">Company </span>
                     </div> 
-                    <input type="text" class="form-control" name="company" id="pattern_company">
+                    <input type="text" class="form-control" value="ddd" name="company" id="pattern_company"">
                 </div>
                 
                 <div class="input-group-prepend">
                     <span class="input-group-text" id="basic-addon1">Name </span>
                 </div> 
-                <input type="text" class="form-control" name="name" id="pattern_name" required>
+                <input type="text" class="form-control" name="name" value="<%=pattern.name%>" id="pattern_name" required>
             </div>
 
             <div class="input-group mb-3">
                 <div class="input-group-prepend">
                     <span class="input-group-text" id="basic-addon2">Number </span>
                 </div> 
-                <input type="text" class="form-control" name="number" id="pattern_number">
+                <input type="text" class="form-control" value="<%=pattern.number%>" name="number" id="pattern_number">
             </div>
 
             <div class="input-group mb-3">
                 <div class="input-group-prepend">
                     <span class="input-group-text" id="basic-addon4">Type </span>
                 </div> 
-                <select class="form-control" name="type" id="pattern_type_select" multiple required size="8">
+                <select class="form-control" name="type" id="pattern_type_select" multiple required  size="8">
                 </select>
             </div>
 
             <div class="input-group mb-3">
                 <div class="input-group-prepend">
-                    <span class="input-group-text" id="basic-addon4">Size </span>
+                    <span class="input-group-text" id="dvbasic-addon4">Size </span>
                 </div> 
                 
                 <div class="form-check-inline"> <label class="form-check-label">
@@ -75,7 +75,7 @@
                 <div class="input-group-prepend">
                     <span class="input-group-text" id="basic-addon5">Size category</span>
                 </div> 
-                <select class="form-control" name="size_category" id="pattern_size_category" multiple="multiple" size="6">
+                <select class="form-control" name="size_category" value="<%=pattern.size_category%>" id="pattern_size_category" size="5">
                     <!-- <div id="type_options"></div> -->
                 </select>
             </div>
@@ -93,7 +93,7 @@
                 <div class="input-group-prepend">
                     <span class="input-group-text" id="basic-addon6">Fabric length (m)</span>
                 </div> 
-                <input type="number" class="form-control" name="fabric_length" id="pattern_length" value="0.00" step="0.01">
+                <input type="number" class="form-control" name="fabric_length" id="pattern_length" value="<%=pattern.fabric_length%>" step="0.01">
             </div>
 
 
@@ -101,7 +101,7 @@
                 <div class="input-group-prepend">
                     <span class="input-group-text" id="basic-addon7">Note </span>
                 </div> 
-                <textarea type="" class="form-control" name="note" id="pattern_note"></textarea>
+                <textarea type="" class="form-control" name="note" value="<%=pattern.note%>" id="pattern_note" size="1"></textarea>
             </div>
 
             <div class="input-group mb-3">
@@ -124,8 +124,8 @@
                 name="files"
                 id="files"
                 multiple
-                data-max-file-size="25MB"
-                data-max-files="10" >
+                data-max-file-size="3MB"
+                data-max-files="3" >
             Thumbnail : 
             <input type="file" 
             class="filepond"
@@ -183,6 +183,37 @@
             console.log(options)
         });
 
+        var urlParams;
+        (window.onpopstate = function () {
+            var match,
+                pl     = /\+/g,  // Regex for replacing addition symbol with a space
+                search = /([^&=]+)=?([^&]*)/g,
+                decode = function (s) { return decodeURIComponent(s.replace(pl, " ")); },
+                query  = window.location.search.substring(1);
+        
+            urlParams = {};
+            while (match = search.exec(query))
+            urlParams[decode(match[1])] = decode(match[2]);
+        })();
+
+        // var id = this.query.id;
+        console.log(urlParams)
+        $.get("single?id="+  urlParams.id, (data) => {
+            let options = ""
+            $("#pattern_company").val(data.company)
+            $("#pattern_number").val(data.number)
+            $("#size_custom").val(data.size)
+            $("#pattern_size_category").val(data.size_category)
+            $("#type_options").val(data.type)
+            $("#pattern_fabric_select").val(data.fabric)
+            $("#type_options").val(data.type)
+            $("#pattern_note").val(data.note)
+            $("#pattern_date").val(data.date)
+            console.log(options)
+        });
+
+        // $("#pattern_company").value(pattern.pattern_company)
+        
         // We register the plugins required to do 
         // image previews, cropping, resizing, etc.
         FilePond.registerPlugin(
@@ -233,8 +264,6 @@
         });
     });
 
-
-        
     const inputElement = document.querySelector('#files');
     const pond = FilePond.create( inputElement );
     pond.setOptions({
@@ -242,4 +271,7 @@
     })
 
 </script>
+
+
+
 

@@ -12,7 +12,7 @@
 <main>
     <div class="jumbotron">
         <h1>Remove a pattern from the database</h1>
-        <form method="post" action="/patterns/remove">
+        <form method="post" action="/patterns/remove" id="removeForm" name="MyFormName">
             <div class="mb-3">
                 <label for="" class="form-label">Pattern name</label>
                 <select class="form-control" name="pattern" id="pattern" multiple>
@@ -31,3 +31,25 @@
 <footer>
   <%- include('partials/footer'); %>
 </footer>
+
+<script>
+      $(document).ready(function(){ 
+          $('#removeForm').submit(function(event) {
+            event.preventDefault(); // Prevent the form from submitting via the browser
+            var form = $(this);
+            $.ajax({
+                type: form.attr('method'),
+                url: form.attr('action'),
+                data: form.serialize()
+            }).done(function(data) {
+            // Optionally alert the user of success here...
+                console.log("Part removed.")
+                alert("Pattern removed successfully.")
+                location.reload();
+            }).fail(function(data) {
+              alert("Pattern removal failed.")
+            // Optionally alert the user of an error here...
+            });
+        });
+      })
+</script>

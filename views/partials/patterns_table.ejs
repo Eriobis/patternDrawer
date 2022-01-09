@@ -30,7 +30,7 @@
 </style>
 
 <div id="patternTable">
-<table class="table  display" name="pattern_table" id="pattern_table" >
+<table class="table stripe" name="pattern_table" id="pattern_table" >
     <thead>
         <tr>
             <th>Thumbnail</th>
@@ -56,8 +56,7 @@
     $(document).ready( function () {
 
         var table = $('#pattern_table').DataTable({
-            select:true,
-            dom:  "Bfrtip",
+            dom:  "frtipB",
             language: {
                 searchBuilder: {
                     button: 'Filter',
@@ -78,7 +77,7 @@
                                 <img class="thumb" src="/data/` + data + `/thumb.png" alt="">
                                 </a>` ;
                     },
-                    "defaultContent": 'aaa'
+                    "defaultContent": 'None'
                 },
                 {  "data": "type"},
                 {  "data": "size_category"},
@@ -121,39 +120,71 @@
 
 /* Function for child row details*/
 function getChildRow(data, files) {
-            // console.log(data)
+        console.log(data)
         // `data` is the data object for the row
         let filesArray = ""
 
-        files.responseJSON[data.id].forEach(element => {
-            filesArray += (`<a target="_blank" href="/data/${data.id}/${element}">${element.replace("files/","")}</a><br>`)
-        });
+        if (Array.isArray(files.responseJSON[data.id])){
+            files.responseJSON[data.id].forEach(element => {
+                filesArray += (`<a target="_blank" href="/data/${data.id}/${element}">${element.replace("files/","")}</a><br>`)
+            });
+        }
 
-        let subRow = '<table class="table" cellpadding="5" cellspacing="0"'
+        let subRow = '<table class="table" id="sub_table_'+data.id+'" cellpadding="0" cellspacing="0"'
         + ' style="padding-left:50px;">' +
         '<tr>' +
             '<td></td>' +
             '<td>Pattern name:</td>' +
-            '<td>' + data.name + '</td>' +
+            '<td id="sub_name_'+data.id+'">' + data.name + '</td>' +
         '</tr>' +
         '<tr>' +
             '<td></td>' +
             '<td>Pattern number:</td>' +
-            '<td>' + data.number + '</td>' +
+            '<td id="sub_number_'+data.id+'">' + data.number + '</td>' +
         '</tr>' +
         '<tr>' +
             '<td></td>' +
             '<td>Personal note:</td>' +
-            '<td>' + data.note + '</td>' +
+            '<td id="sub_note_'+data.id+'">' + data.note + '</td>' +
         '</tr>' +
         '<tr>' +
             '<td></td>' +
             '<td>Files:</td>' +
-            '<td>' + filesArray + '</td>' +
+            '<td id="sub_files_'+data.id+'">' + filesArray + '</td>' +
+            '<td><a href=/patterns/edit?id=' + data.id + '>Edit</a></td>' +
         '</tr>' +
         '</table>'
         console.log(subRow)
         return subRow;
 
+}
+
+var mainrow = null
+
+function editrow(row, id){
+    
+    mainrow = $(row).parents("tr");
+    var cols = mainrow.children("td");
+
+    // console.log(row)
+    // console.log(mainrow[1])
+    // console.log(cols)
+    var oldValue = $("#sub_files_"+id).val();
+    var subtable = $("#sub_table_"+id);
+    // console.log(subtable)
+    // // console.log(subtable.row())
+    // console.log(subtable.rows())
+
+    // Set what's inside that cell
+    $("#"+cols[2].id).html(`<input type="text" name="number" value="${$(cols[2]).text()}" id="pattern_number">`)
+    $("#btn_edit_" + id).text("Accept")
+    console.log(cols[2].id)
+    var files = $.ajax({
+        url:'/patterns/debug',
+        method: "POST",
+        data: {
+            id:`${row}`
+        }
+    })
 }
 </script>
