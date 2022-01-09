@@ -15,7 +15,7 @@
         <form method="post" action="/patterns/remove" id="removeForm" name="MyFormName">
             <div class="mb-3">
                 <label for="" class="form-label">Pattern name</label>
-                <select class="form-control" name="pattern" id="pattern" multiple>
+                <select class="form-control" name="pattern" id="pattern" multiple size="25">
                     <% pattern_list.forEach((pattern) => { %>
                         
                         <option value=<%= pattern.id %>><%= pattern.id %> - <%= pattern.name %></option>
