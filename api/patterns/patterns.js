@@ -1,16 +1,21 @@
 /**
 import * as FilePond from 'filepond';
  */
-
+const {body} = require('express-validator')
 var mysql = require('mysql');
 
-var db = mysql.createConnection({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASS,
-  database: process.env.DB_DATABASE
-});
-
+try {
+  
+  var db = mysql.createConnection({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASS,
+    database: process.env.DB_DATABASE
+  });
+} catch (error) {
+  console.log(error)
+}
+  
 const formidable = require('formidable');
 const express = require('express'),
       router = express.Router();
@@ -49,13 +54,58 @@ router.get("/add", (req, res) => {
   res.render("add")
 });
 
+// Edit pattern
+router.get("/edit", (req, res) => {
+  console.log("Edit" + JSON.stringify(req.query))
+  let query = req.query
+  if (query != undefined && query != "" && query.id != undefined && query.id != ''){
+    let singleResultQuery = patternsQuery + ` WHERE id=${query.id}`
+    db.query(singleResultQuery, function (err, result) {
+      if (err) throw err;
+      console.log("Result: " + JSON.stringify(result[0]));
+      res.render("edit", {
+        pattern: result[0]
+      })
+    });
+  }else{
+    res.status(501)
+  }
+});
+
+router.get("/single", (req, res) => {
+  let query = req.query
+  if (query != undefined && query != "" && query.id != undefined && query.id != ''){
+    let singleResultQuery = patternsQuery + ` WHERE id=${query.id}`
+    db.query(singleResultQuery, function (err, result) {
+      if (err) throw err;
+      console.log("Result: " + JSON.stringify(result[0]));
+      res.json(result[0])
+    });
+  }else{
+    res.status(501)
+  }
+});
+
+
+// Remove from database
+router.get("/remove", (req, res) => {
+  db.query(patternsQuery, function (err, result) {
+    if (err) throw err;
+    console.log("Result: " + result);
+    // res.json(result);
+    res.render("remove", {
+      pattern_list: result
+    })
+  });
+});
+
 // List all files in the data folder
 router.get("/files", (req, res) => {
   const patternFiles = './data/';
   const fs = require('fs');
   var glob = require('glob');
   // options is optional
-  glob("./data/**/*.*",function (er, files) {
+  glob("./data/**/*.pdf",function (er, files) {
     // files is an array of filenames.
     // If the `nonull` option is set, and nothing
     // was found, then files is ["**/*.js"]
@@ -156,83 +206,119 @@ router.get("/size_category", (req, res) => {
 });
 
 router.post("/debug", (req, res) => {
+  console.log("Body:")
   console.log(req.body)
+  console.log("Query:")
+  console.log(req.query)
+  res.send("ok")
+})
+
+router.get("/debug", (req, res) => {
+  console.log("Body:")
+  console.log(req.body)
+  console.log("Query:")
+  console.log(req.query)
   res.send("ok")
 })
 
 router.post("/add", (req, res) => {
-  console.log(req.body)
+                    
+// router.post("/add",body('name').escape(),
+//                   body('note').escape(),
+//                   body('company').escape(),
+//                   body('number').escape(),
+//                   body('size').escape(), (req, res) => {
+                    
+console.log(req.body)
 
   if (req.body.type == 'undefined'){
     req.body.type = ""
   }
-
+  
   var query = "INSERT INTO pattern (`name`, `number`, `size`, `company`, `fabric`, `fabric_length`, `note`, `type`, `size_category`)" +
-              `VALUES ( '${req.body.name}',  '${req.body.number}', '${req.body.size}', '${req.body.company}', '${req.body.fabric}',
-                      ${parseFloat(req.body.fabric_length)},'${req.body.note}','${req.body.type}', '${req.body.size_category}')`
+              `VALUES ( ${db.escape(req.body.name)},  ${db.escape(req.body.number)}, ${db.escape(req.body.size)}, ${db.escape(req.body.company)}, ${db.escape(req.body.fabric)},
+                      ${parseFloat(req.body.fabric_length)},${db.escape(req.body.note)},"${db.escape(req.body.type)}", "${db.escape(req.body.size_category)}")`
 
       console.log(`Add pattern SQL query : ${query}`);
-
-      db.query(query, function (err, result) {
-        if (err){
-          res.send("FAILED\n" + JSON.stringify(req.body) + "\nError : " + result)
-          throw err
-        }
-        else{
-          console.log("Result: " + JSON.stringify(result));
-          console.log(`Object added, body : ${req.body}`)
-          // Query is accepted, save the files on disk
-          const fs = require('fs');
-          // let fileData = fs.readFileSync(req.body.files);
-          // let thumbnail = fs.readFileSync(req.body.filepond);
-          let basepath = `${__dirname}/../../data/${result.insertId}`
-          fs.mkdirSync(basepath, {recursive:true} )
-          fs.mkdirSync(basepath + "/files")
-          fs.mkdirSync(basepath + "/thumb")
-
-          if(req.body.files != '' && req.body.files != undefined){
-
-            if (Array.isArray(req.body.files) && req.body.files.length > 1){
-              console.log(req.body.files)
-              req.body.files.forEach((file)=>{
-                var f = JSON.parse(file).files
-                fs.rename(f.filepath, `${basepath}/files/${f.originalFilename}`,(err)=>{
-                  if(err) throw err
-                  else{
-                    // Store the files info into the DB
-                    // let q = "INSERT INTO pattern_files ('pattern_id', 'filename')";
-                  };
-                });
+  try {
+    db.query(query, function (err, result) {
+      if (err){
+        res.status(501).send("FAILED\n" + JSON.stringify(req.body) + "\nError : " + result)
+        console.log(err)
+        console.log(result)
+      }
+      else{
+        // console.log("Result: " + JSON.stringify(result));
+        // console.log(`Object added, body : ${req.body}`)
+        // Query is accepted, save the files on disk
+        const fs = require('fs');
+        // let fileData = fs.readFileSync(req.body.files);
+        // let thumbnail = fs.readFileSync(req.body.filepond);
+        let basepath = `${__dirname}/../../data/${result.insertId}`
+        fs.mkdirSync(basepath, {recursive:true} )
+        fs.mkdirSync(basepath + "/files")
+        fs.mkdirSync(basepath + "/thumb")
+        
+        if(req.body.files != '' && req.body.files != undefined){
+          
+          if (Array.isArray(req.body.files) && req.body.files.length > 1){
+            console.log(req.body.files)
+            req.body.files.forEach((file)=>{
+              var f = JSON.parse(file).files
+              var newfilename = `${basepath}/files/${f.originalFilename}`
+              fs.copyFile(f.filepath, newfilename,(err)=>{
+                if(err) throw err
+                else{
+                  fs.unlink(f.filepath, (err)=>{
+                    if(err) throw err;
+                    console.log(f.filepath + 'was deleted');
+                  })
+                  // Store the files info into the DB
+                  // let q = "INSERT INTO pattern_files ('pattern_id', 'filename')";
+                };
               });
-            }else{
-              var f = JSON.parse(req.body.files).files
-              fs.rename(f.filepath, `${basepath}/files/${f.originalFilename}`,(err)=>{
-                if(err) throw err;
-              });
-            }
-          }
-
-          // Thumbnail will have 1 file max
-          if (req.body.filepond_thumb != undefined && req.body.filepond_thumb != ''){
-            var f = JSON.parse(req.body.filepond_thumb).filepond_thumb
-            fs.rename(f.filepath, `${basepath}/thumb.png`, (err)=>{
+            });
+          }else{
+            var f2 = JSON.parse(req.body.files).files
+            fs.copyFile(f2.filepath, `${basepath}/files/${f2.originalFilename}`,(err)=>{
               if(err) throw err;
+              fs.unlink(f2.filepath, (err)=>{
+                if(err) throw err;
+                console.log(f2.filepath + 'was deleted');
+              })
             });
           }
-          console.log(`Entry added : ${result.insertId} - ${req.body.name}`)
-          res.send("Entry accepted")
         }
-      });
-});
-
-// File uploader
-router.post("/upload", function(req, res){
-  console.log("BEGIN /upload");
-  const form = formidable({ multiples: false });
-
-  form.parse(req, (err, fields, files) => {
-    if (err) {
-      res.writeHead(err.httpCode || 400, { 'Content-Type': 'text/plain' });
+        
+        // Thumbnail will have 1 file max
+        if (req.body.filepond_thumb != undefined && req.body.filepond_thumb != ''){
+          var fth = JSON.parse(req.body.filepond_thumb).filepond_thumb
+          fs.copyFile(fth.filepath, `${basepath}/thumb.png`, (err)=>{
+            if(err) throw err;
+            fs.unlink(fth.filepath, (err)=>{
+              if(err) throw err;
+              console.log(fth.filepath + 'was deleted');
+            })
+          });
+        }
+        console.log(`Entry added : ${result.insertId} - ${req.body.name}`)
+        res.send("Entry accepted")
+      }
+    });
+    
+  } catch (error) {
+    res.sendStatus(501)
+  }
+  });
+  
+  // File uploader
+  router.post("/upload", function(req, res){
+    console.log("BEGIN /upload");
+    const form = formidable({ multiples: false });
+    
+    form.parse(req, (err, fields, files) => {
+      if (err) {
+        res.writeHead(err.httpCode || 400, { 'Content-Type': 'text/plain' });
       res.end(String(err));
       return;
     }
