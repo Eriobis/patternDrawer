@@ -237,7 +237,7 @@ console.log(req.body)
   
   var query = "INSERT INTO pattern (`name`, `number`, `size`, `company`, `fabric`, `fabric_length`, `note`, `type`, `size_category`)" +
               `VALUES ( ${db.escape(req.body.name)},  ${db.escape(req.body.number)}, ${db.escape(req.body.size)}, ${db.escape(req.body.company)}, ${db.escape(req.body.fabric)},
-                      ${parseFloat(req.body.fabric_length)},${db.escape(req.body.note)},"${db.escape(req.body.type)}", "${db.escape(req.body.size_category)}")`
+                      ${parseFloat(req.body.fabric_length)},${db.escape(req.body.note)},"${req.body.type}", "${req.body.size_category}")`
 
       console.log(`Add pattern SQL query : ${query}`);
   try {
