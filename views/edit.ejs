@@ -75,7 +75,7 @@
                 <div class="input-group-prepend">
                     <span class="input-group-text" id="basic-addon5">Size category</span>
                 </div> 
-                <select class="form-control" name="size_category" value="<%=pattern.size_category%>" id="pattern_size_category" size="5">
+                <select class="form-control" name="size_category" value="<%=pattern.size_category%>" id="pattern_size_category" size="5" multiple>
                     <!-- <div id="type_options"></div> -->
                 </select>
             </div>
@@ -134,7 +134,7 @@
             accept="image/png, image/jpeg, image/gif"/>
         </div>
             
-
+            <input type="hidden" name="id" value="<%=pattern.id%>" /> 
                 <!-- <input type="submit" value="Submit"> -->
             <button type="submit" class="btn btn-primary" name="Submit" value="submit">Submit</button>
         </div>
@@ -150,6 +150,7 @@
 </html>
 
 <script>
+    var initialData = null
     $(document).ready(function(){ 
         $.get("fabric_type", (data) => {
             let options = ""
@@ -163,10 +164,14 @@
         $.get("pattern_type", (data) => {
             let options = ""
             data.forEach((type) => {
-                options = `<option id=pattern_type_${type.id}>${type.name}</option>`
+                options = `<option id=pattern_type_${type.name}>${type.name}</option>`
                 $("#pattern_type_select").append(options)
             });
-            console.log(options)
+
+            $.get("single?id="+  urlParams.id, (d) => {
+                $("#pattern_type_select").val(d.type.split(','))
+                console.log(options)
+            })
         });
         
         $.get("size_category", (data) => {
@@ -175,6 +180,11 @@
                 options = `<option id=pattern_type_${type.id}>${type.name}</option>`
                 $("#pattern_size_category").append(options)
             });
+
+            $.get("single?id="+  urlParams.id, (d) => {
+                $("#pattern_size_category").val(d.size_category.split(','))
+                console.log(options)
+            })
             console.log(options)
         });
 
@@ -194,17 +204,16 @@
         // var id = this.query.id;
         console.log(urlParams)
         $.get("single?id="+  urlParams.id, (data) => {
+            initialData = data;
             let options = ""
             $("#pattern_company").val(data.company)
             $("#pattern_number").val(data.number)
             $("#size_custom").val(data.size)
-            $("#pattern_size_category").val(data.size_category)
-            $("#type_options").val(data.type)
+            $("#pattern_length").val(data.fabric_length)
             $("#pattern_fabric_select").val(data.fabric)
-            $("#type_options").val(data.type)
             $("#pattern_note").val(data.note)
             $("#pattern_date").val(data.date)
-            console.log(options)
+            console.log(data.size_category.split(','))
         });
 
         // $("#pattern_company").value(pattern.pattern_company)
@@ -244,6 +253,7 @@
         $('#myform').submit(function(event) {
             event.preventDefault(); // Prevent the form from submitting via the browser
             var form = $(this);
+            console.log(form.data())
             $.ajax({
                 type: form.attr('method'),
                 url: form.attr('action'),
@@ -251,9 +261,10 @@
             }).done(function(data) {
             // Optionally alert the user of success here...
                 console.log("Part entered.")
-                alert("Pattern entered successfully.")
+                alert("Pattern updated successfully.")
                 location.reload();
             }).fail(function(data) {
+                alert("Update failed : " + JSON.stringify(data))
             // Optionally alert the user of an error here...
             });
         });

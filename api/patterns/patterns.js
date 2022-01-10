@@ -72,6 +72,37 @@ router.get("/edit", (req, res) => {
   }
 });
 
+router.post("/edit", (req,res) => {
+
+  var data = req.body
+  var query = `UPDATE pattern SET name=${db.escape(data.name)},
+                                  number=${db.escape(data.number)},
+                                  size="${db.escape(data.size)}",
+                                  company=${db.escape(data.company)},
+                                  fabric=${db.escape(data.fabric)},
+                                  fabric_length=${parseFloat(data.fabric_length)},
+                                  note=${db.escape(data.note)},
+                                  type="${data.type}",
+                                  size_category="${data.size_category}"
+              WHERE id=${data.id}`
+
+  console.log(query)
+
+  db.query(query, (err, result)=>{
+    if (err){
+      res.status(500).send(err)
+      console.log(err)
+      console.log(result)
+    }
+    else{
+      add_files(data.id, data);
+      res.sendStatus(200)
+    }
+  })
+  
+
+})
+
 router.get("/single", (req, res) => {
   let query = req.query
   if (query != undefined && query != "" && query.id != undefined && query.id != ''){
@@ -105,7 +136,7 @@ router.get("/files", (req, res) => {
   const fs = require('fs');
   var glob = require('glob');
   // options is optional
-  glob("./data/**/*.pdf",function (er, files) {
+  glob("./data/**/*.*",function (er, files) {
     // files is an array of filenames.
     // If the `nonull` option is set, and nothing
     // was found, then files is ["**/*.js"]
@@ -121,7 +152,12 @@ router.get("/files", (req, res) => {
       }else{
         fileArr[id] = []
       }
-      fileArr[id].push(filename)
+
+      // Exclude the thumbnail
+      if (filename != "thumb.png"){
+        fileArr[id].push(filename)
+      }
+
     });
     res.json(fileArr)
   })
@@ -248,48 +284,9 @@ console.log(req.body)
         console.log(result)
       }
       else{
-        // console.log("Result: " + JSON.stringify(result));
-        // console.log(`Object added, body : ${req.body}`)
         // Query is accepted, save the files on disk
-        const fs = require('fs');
-        // let fileData = fs.readFileSync(req.body.files);
-        // let thumbnail = fs.readFileSync(req.body.filepond);
-        let basepath = `${__dirname}/../../data/${result.insertId}`
-        fs.mkdirSync(basepath, {recursive:true} )
-        fs.mkdirSync(basepath + "/files")
-        fs.mkdirSync(basepath + "/thumb")
-        
-        if(req.body.files != '' && req.body.files != undefined){
-          
-          if (Array.isArray(req.body.files) && req.body.files.length > 1){
-            console.log(req.body.files)
-            req.body.files.forEach((file)=>{
-              var f = JSON.parse(file).files
-              var newfilename = `${basepath}/files/${f.originalFilename}`
-              fs.copyFile(f.filepath, newfilename,(err)=>{
-                if(err) throw err
-                else{
-                  fs.unlink(f.filepath, (err)=>{
-                    if(err) throw err;
-                    console.log(f.filepath + 'was deleted');
-                  })
-                  // Store the files info into the DB
-                  // let q = "INSERT INTO pattern_files ('pattern_id', 'filename')";
-                };
-              });
-            });
-          }else{
-            var f2 = JSON.parse(req.body.files).files
-            fs.copyFile(f2.filepath, `${basepath}/files/${f2.originalFilename}`,(err)=>{
-              if(err) throw err;
-              fs.unlink(f2.filepath, (err)=>{
-                if(err) throw err;
-                console.log(f2.filepath + 'was deleted');
-              })
-            });
-          }
-        }
-        
+        add_files(result.id, req.body);
+
         // Thumbnail will have 1 file max
         if (req.body.filepond_thumb != undefined && req.body.filepond_thumb != ''){
           var fth = JSON.parse(req.body.filepond_thumb).filepond_thumb
@@ -328,4 +325,52 @@ console.log(req.body)
   });
 })
 
+
+function add_files(id, body){
+
+    // Query is accepted, save the files on disk
+    const fs = require('fs');
+    // let fileData = fs.readFileSync(req.body.files);
+    // let thumbnail = fs.readFileSync(req.body.filepond);
+    let basepath = `${__dirname}/../../data/${id}`
+    console.log("Add files id: " + id)
+    try {
+      fs.mkdirSync(basepath, {recursive:true} )
+      fs.mkdirSync(basepath + "/files")
+      fs.mkdirSync(basepath + "/thumb")
+    } catch (error) {
+      
+    }
+    
+    if(body.files != '' && body.files != undefined){
+      
+      if (Array.isArray(body.files) && body.files.length > 1){
+        console.log(req.body.files)
+        body.files.forEach((file)=>{
+          var f = JSON.parse(file).files
+          var newfilename = `${basepath}/files/${f.originalFilename}`
+          fs.copyFile(f.filepath, newfilename,(err)=>{
+            if(err) throw err
+            else{
+              fs.unlink(f.filepath, (err)=>{
+                if(err) throw err;
+                console.log(f.filepath + 'was deleted');
+              })
+              // Store the files info into the DB
+              // let q = "INSERT INTO pattern_files ('pattern_id', 'filename')";
+            };
+          });
+        });
+      }else{
+        var f2 = JSON.parse(body.files).files
+        fs.copyFile(f2.filepath, `${basepath}/files/${f2.originalFilename}`,(err)=>{
+          if(err) throw err;
+          fs.unlink(f2.filepath, (err)=>{
+            if(err) throw err;
+            console.log(f2.filepath + 'was deleted');
+          })
+        });
+      }
+    }
+}
 module.exports = router;

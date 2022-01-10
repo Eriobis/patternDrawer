@@ -3,7 +3,6 @@
     .thumb {
       border: 1px solid #ddd; /* Gray border */
       border-radius: 10px;  /* Rounded border */
-      
       width: 150px; /* Set a small width */
     }
     
@@ -59,9 +58,12 @@
                 .eq(0)
                 .each(function (colIdx) {
                     // Set the header cell to contain the input element
-                    var cell = $('.filters th').eq(
-                        $(api.column(colIdx).header()).index()
-                    );
+                    if(colIdx != 0){
+
+                        var cell = $('.filters th').eq(
+                            $(api.column(colIdx).header()).index()
+                            );
+                    
                     var title = $(cell).text();
                     $(cell).html('<input type="text" placeholder="' + title + '" size="4"/>');
                     // On every keypress in this input
@@ -91,6 +93,7 @@
                                 .focus()[0]
                                 .setSelectionRange(cursorPosition, cursorPosition);
                         });
+                    }
                 });
         },
             // searchBuilder: true,
@@ -104,8 +107,15 @@
                     },
                     "defaultContent": 'None'
                 },
-                {  "data": "type"},
-                {  "data": "size_category"},
+                {  "data": "type",
+                    render: (data,type,row,meta)=>{
+                        return data.replaceAll(",",", ")
+                    }
+                },
+                {  "data": "size_category",
+                    render: (data,type,row,meta)=>{
+                        return data.replaceAll(",", ", ")
+                    }},
                 {  "data": "company"},
                 {  "data": "name"},
                 {  "data": "size"},
