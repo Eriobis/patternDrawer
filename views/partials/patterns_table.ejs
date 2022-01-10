@@ -24,7 +24,6 @@
             <th>Name</th>
             <th>Size</th>
             <th>Fabric</th>
-            <th>Length (m)</th>
         </tr>
     </thead>
 </table>
@@ -119,8 +118,7 @@
                 {  "data": "company"},
                 {  "data": "name"},
                 {  "data": "size"},
-                {  "data": "fabric"},
-                {  "data": "fabric_length"},
+                {  "data": "fabric"}
             ],
             "pageLength": 50
         });
@@ -181,6 +179,11 @@ function getChildRow(data, files) {
             '<td></td>' +
             '<td>Personal note:</td>' +
             '<td id="sub_note_'+data.id+'">' + data.note + '</td>' +
+        '</tr>' +
+        '<tr>' +
+            '<td></td>' +
+            '<td>Fabric length (m):</td>' +
+            '<td id="sub_length_'+data.fabric_length+'">' + data.fabric_length + ' m (' + data.fabric_length*1.0936  + ' yrd)</td>' +
         '</tr>' +
         '<tr>' +
             '<td></td>' +
