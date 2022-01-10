@@ -183,7 +183,7 @@ function getChildRow(data, files) {
         '<tr>' +
             '<td></td>' +
             '<td>Fabric length (m):</td>' +
-            '<td id="sub_length_'+data.fabric_length+'">' + data.fabric_length + ' m (' + data.fabric_length*1.0936  + ' yrd)</td>' +
+            '<td id="sub_length_'+data.fabric_length+'">' + data.fabric_length.toFixed(2) + ' m (' + (data.fabric_length*1.0936).toFixed(2) + ' yrd)</td>' +
         '</tr>' +
         '<tr>' +
             '<td></td>' +
