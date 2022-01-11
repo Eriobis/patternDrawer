@@ -4,23 +4,51 @@ import * as FilePond from 'filepond';
 const {body} = require('express-validator')
 var mysql = require('mysql');
 
-try {
-  
-  var db = mysql.createConnection({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASS,
-    database: process.env.DB_DATABASE
-  });
-} catch (error) {
-  console.log(error)
-}
+var dbConfig = {
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASS,
+  database: process.env.DB_DATABASE
+};
   
 const formidable = require('formidable');
 const express = require('express'),
       router = express.Router();
 // query to get all matches with results
 const patternsQuery = `SELECT * from pattern`
+
+var db;
+function handleDisconnect() {
+  db = mysql.createConnection(dbConfig);  // Recreate the connection, since the old one cannot be reused.
+  global.db = db;
+  db.connect( function onConnect(err) {   // The server is either down
+      if (err) {                                  // or restarting (takes a while sometimes).
+          console.log('error when connecting to db:', err);
+          setTimeout(handleDisconnect, 10000);    // We introduce a delay before attempting to reconnect,
+      }else{
+          console.log('Connected to database');
+      }                                       // to avoid a hot loop, and to allow our node script to
+  });                                             // process asynchronous requests in the meantime.
+                                                  // If you're also serving http, display a 503 error.
+  db.on('error', function onError(err) {
+      if (err.code == 'PROTOCOL_CONNECTION_LOST') {   // Connection to the MySQL server is usually
+          db.destroy();
+          console.log('db error', err);
+          handleDisconnect();                         // lost due to either server restart, or a
+      } else if (err.code == 'ER_TABLEACCESS_DENIED_ERROR') {
+          console.log("MYSQL : Unauthorized action")
+          console.log(err.code)
+      } else {                                        // connnection idle timeout (the wait_timeout
+          throw err;                                  // server variable configures this)
+      }
+  });
+}
+
+try {
+  handleDisconnect();
+} catch (error) {
+  console.log(error);
+}
 
 // Return a table with a list of all the patterns
 router.get("/all", (req, res) => {
@@ -265,7 +293,7 @@ router.post("/add", (req, res) => {
 //                   body('number').escape(),
 //                   body('size').escape(), (req, res) => {
                     
-console.log(req.body)
+  console.log(req.body)
 
   if (req.body.type == 'undefined'){
     req.body.type = ""
@@ -275,7 +303,8 @@ console.log(req.body)
               `VALUES ( ${db.escape(req.body.name)},  ${db.escape(req.body.number)}, ${db.escape(req.body.size)}, ${db.escape(req.body.company)}, ${db.escape(req.body.fabric)},
                       ${parseFloat(req.body.fabric_length)},${db.escape(req.body.note)},"${req.body.type}", "${req.body.size_category}")`
 
-      console.log(`Add pattern SQL query : ${query}`);
+  console.log(`Add pattern SQL query : ${query}`);
+  
   try {
     db.query(query, function (err, result) {
       if (err){
@@ -285,28 +314,21 @@ console.log(req.body)
       }
       else{
         // Query is accepted, save the files on disk
-        add_files(result.id, req.body);
-
-        // Thumbnail will have 1 file max
-        if (req.body.filepond_thumb != undefined && req.body.filepond_thumb != ''){
-          var fth = JSON.parse(req.body.filepond_thumb).filepond_thumb
-          fs.copyFile(fth.filepath, `${basepath}/thumb.png`, (err)=>{
-            if(err) throw err;
-            fs.unlink(fth.filepath, (err)=>{
-              if(err) throw err;
-              console.log(fth.filepath + 'was deleted');
-            })
-          });
+        try{
+          add_files(result.insertId, req.body);
+          add_thumbnail(result.insertId, req.body);
+          console.log(`Entry added : ${result.insertId} - ${req.body.name}`)
+          res.send("Entry accepted")
+        }catch(error){
+          res.status(501).send("Entry failed")
         }
-        console.log(`Entry added : ${result.insertId} - ${req.body.name}`)
-        res.send("Entry accepted")
       }
     });
     
   } catch (error) {
     res.sendStatus(501)
   }
-  });
+});
   
   // File uploader
   router.post("/upload", function(req, res){
@@ -372,5 +394,24 @@ function add_files(id, body){
         });
       }
     }
+}
+
+function add_thumbnail(id, body){
+  // Query is accepted, save the files on disk
+  const fs = require('fs');
+  // let fileData = fs.readFileSync(req.body.files);
+  // let thumbnail = fs.readFileSync(req.body.filepond);
+  let basepath = `${__dirname}/../../data/${id}`
+  // Thumbnail will have 1 file max
+  if (body.filepond_thumb != undefined && body.filepond_thumb != ''){
+    var fth = JSON.parse(body.filepond_thumb).filepond_thumb
+    fs.copyFile(fth.filepath, `${basepath}/thumb.png`, (err)=>{
+      if(err) throw err;
+      fs.unlink(fth.filepath, (err)=>{
+        if(err) throw err;
+        console.log(fth.filepath + 'was deleted');
+      })
+    });
+  }
 }
 module.exports = router;
