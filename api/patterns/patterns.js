@@ -367,7 +367,7 @@ function add_files(id, body){
     if(body.files != '' && body.files != undefined){
       
       if (Array.isArray(body.files) && body.files.length > 1){
-        console.log(req.body.files)
+        console.log(body.files)
         body.files.forEach((file)=>{
           var f = JSON.parse(file).files
           var newfilename = `${basepath}/files/${f.originalFilename}`
