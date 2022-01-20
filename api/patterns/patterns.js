@@ -52,12 +52,12 @@ try {
 
 // Return a table with a list of all the patterns
 router.get("/all", (req, res) => {
-    console.log("Connected!");
+    console.log("User on the main page!" + JSON.stringify(req.headers));
     db.query(patternsQuery, function (err, result) {
       if (err) {
         throw err
       }else{
-        console.log("Result: " + JSON.stringify(result));
+        // console.log("Result: " + JSON.stringify(result));
         // res.json(result);
         res.render("partials/patterns_table", {
           pattern_list: result
@@ -300,7 +300,7 @@ router.post("/add", (req, res) => {
   }
   
   var query = "INSERT INTO pattern (`name`, `number`, `size`, `company`, `fabric`, `fabric_length`, `note`, `type`, `size_category`)" +
-              `VALUES ( ${db.escape(req.body.name)},  ${db.escape(req.body.number)}, ${db.escape(req.body.size)}, ${db.escape(req.body.company)}, ${db.escape(req.body.fabric)},
+              `VALUES ( ${db.escape(req.body.name)},  ${db.escape(req.body.number)}, "${db.escape(req.body.size)}", ${db.escape(req.body.company)}, ${db.escape(req.body.fabric)},
                       ${parseFloat(req.body.fabric_length)},${db.escape(req.body.note)},"${req.body.type}", "${req.body.size_category}")`
 
   console.log(`Add pattern SQL query : ${query}`);
